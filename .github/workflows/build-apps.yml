@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: npm }
+        with: { node-version: 20 }
       - run: npm install
       - run: python -m pip install pillow
       - run: python -c "from PIL import Image,ImageDraw; im=Image.new('RGBA',(256,256),(9,11,20,255)); d=ImageDraw.Draw(im); d.rounded_rectangle((18,18,238,238),radius=48,fill=(112,83,210,255)); d.text((76,42),'W',fill=(255,255,255,255),stroke_width=2); im.save('assets/wednesday.ico',sizes=[(256,256),(128,128),(64,64),(32,32),(16,16)])"
@@ -29,6 +29,9 @@ jobs:
       - run: npm install
       - run: npm run build
       - run: npx cap add android
+      - run: python -m pip install pillow
+      - run: python -c "from PIL import Image,ImageDraw; import os; os.makedirs('assets',exist_ok=True); im=Image.new('RGBA',(1024,1024),(9,11,20,255)); d=ImageDraw.Draw(im); d.rounded_rectangle((80,80,944,944),radius=210,fill=(112,83,210,255)); d.text((310,180),'W',fill=(255,255,255,255),stroke_width=8); im.save('assets/icon-only.png'); sp=Image.new('RGB',(2732,2732),(9,11,20)); sd=ImageDraw.Draw(sp); sd.rounded_rectangle((950,950,1782,1782),radius=180,fill=(112,83,210)); sd.text((1200,1150),'W',fill='white',stroke_width=8); sp.save('assets/splash.png')"
+      - run: npx capacitor-assets generate --android
       - run: npx cap sync android
       - run: chmod +x android/gradlew
       - run: cd android && ./gradlew assembleDebug
