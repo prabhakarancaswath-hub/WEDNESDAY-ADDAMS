@@ -1,7 +1,9 @@
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 function send(res: any, status: number, body: unknown) {
-  res.status(status).setHeader("Content-Type", "application/json").json(body);
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json");
+  res.end(JSON.stringify(body));
 }
 
 export default async function handler(req: any, res: any) {
