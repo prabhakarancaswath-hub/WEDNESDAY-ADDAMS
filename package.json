@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "desktop": "electron .",
-    "desktop:dist": "npm run build && electron-builder --win nsis",
+    "desktop:dist": "npm run build && electron-builder --win nsis --publish never",
     "android:sync": "npm run build && cap sync android"
   },
   "dependencies": {
