@@ -8,7 +8,7 @@ export default function App(){
 const [data,setData]=useState<State>(readState),[page,setPage]=useState("Overview"),[taskText,setTaskText]=useState(""),[noteText,setNoteText]=useState(""),[amount,setAmount]=useState(""),[entryLabel,setEntryLabel]=useState(""),[entryKind,setEntryKind]=useState<"income"|"expense">("expense"),[chat,setChat]=useState("Hi Aswath. I'm Wednesday, your personal command centre. I can help organise the information you add here."),[question,setQuestion]=useState(""),[search,setSearch]=useState(""),[toast,setToast]=useState("");
 useEffect(()=>{localStorage.setItem("wednesday-state",JSON.stringify(data));},[data]);
 const notify=(s:string)=>{setToast(s);window.setTimeout(()=>setToast(""),2400);};
-const update=<K extends keyof State>(key:K,value:State[K])=>setData(d=>({...d,[key]:value}));
+const update=<K extends keyof State,>(key:K,value:State[K])=>setData(d=>({...d,[key]:value}));
 const done=data.tasks.filter(t=>t.done).length,balance=data.entries.reduce((a,e)=>a+(e.kind==="income"?e.amount:-e.amount),0),spent=data.entries.filter(e=>e.kind==="expense").reduce((a,e)=>a+e.amount,0);
 const nav=[["Overview",LayoutDashboard],["Tasks",ListTodo],["Projects",FolderKanban],["Money",Wallet],["Wellbeing",Activity],["Memory",StickyNote],["Assistant",Bot],["Settings",Settings]] as const;
 const greeting=useMemo(()=>{const h=new Date().getHours();return h<12?"Good morning":h<17?"Good afternoon":"Good evening";},[]);
