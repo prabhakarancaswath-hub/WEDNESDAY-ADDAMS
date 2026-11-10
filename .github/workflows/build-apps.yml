@@ -12,6 +12,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: npm }
       - run: npm install
+      - run: python -m pip install pillow
+      - run: python -c "from PIL import Image,ImageDraw; im=Image.new('RGBA',(256,256),(9,11,20,255)); d=ImageDraw.Draw(im); d.rounded_rectangle((18,18,238,238),radius=48,fill=(112,83,210,255)); d.text((76,42),'W',fill=(255,255,255,255),stroke_width=2); im.save('assets/wednesday.ico',sizes=[(256,256),(128,128),(64,64),(32,32),(16,16)])"
       - run: npm run build
       - run: npm run desktop:dist
       - uses: actions/upload-artifact@v4
