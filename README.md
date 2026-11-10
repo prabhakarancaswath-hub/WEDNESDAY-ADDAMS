@@ -9,24 +9,20 @@ Windows + Android personal workspace with a GPT-powered assistant backend.
 - Locally saved chat history and JSON backup
 - Windows Electron and Android Capacitor packaging
 
-## Required setup before online GPT works
+## Free local mode and optional online GPT
 
-Wednesday does not connect to a ChatGPT consumer subscription or use this chat's login. It calls the OpenAI API, which is a separate service and may incur usage charges. Since this app is being configured by a minor, a parent/guardian should review and manage the external developer account, billing and service agreements.
+Wednesday opens in **free local mode** without an API key, Supabase account, or paid subscription. Tasks, projects, manual money entries, wellbeing notes, saved notes and chat history are stored in this device's browser/app storage. The built-in local assistant is limited and is not a GPT model.
 
-1. Create a Supabase project and enable email/password authentication.
-2. Run `supabase/schema.sql` in the Supabase SQL Editor to create the private-memory table with Row Level Security.
-3. Import this repository into Vercel and add these server environment variables:
-   - `OPENAI_API_KEY` — secret OpenAI API key
-   - `OPENAI_MODEL` — optional model override; default is `gpt-5.5`
-   - `SUPABASE_URL` — Supabase project URL
-   - `SUPABASE_ANON_KEY` — Supabase publishable/anon key
-4. Add these frontend build variables in Vercel:
-   - `VITE_SUPABASE_URL` — same Supabase project URL
-   - `VITE_SUPABASE_ANON_KEY` — same publishable/anon key
-   - `VITE_API_BASE_URL` — blank when the app and API share one Vercel domain
-5. Redeploy after setting variables. The browser app will then show the email sign-in / create-account screen.
+Online GPT is optional. Wednesday does not connect to a ChatGPT consumer subscription or use this chat's login. OpenAI API billing is separate, and ChatGPT Free does not automatically include API credits. Free API credits are only available when the API organization is specifically eligible and has an active credit grant; otherwise API calls can cost money. Do not add an API key or enable billing just to use local mode. Since this app is being configured by a minor, a parent/guardian must review and manage any external developer account, billing and service agreements.
 
-For local development, copy the public Supabase URL and publishable key into your local Vite environment file. Never put real secrets into a committed file.
+To enable optional online GPT later:
+1. Have a parent/guardian review and create/manage the required service accounts.
+2. Create a Supabase project and enable email/password authentication.
+3. Import this repository into Vercel and add server variables `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and (only if intentionally enabling paid/credited GPT) `OPENAI_API_KEY`. `OPENAI_MODEL` is optional; the backend default is `gpt-5.5`.
+4. Add frontend build variables `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `VITE_API_BASE_URL` (leave the API base blank when the app and API share one Vercel domain).
+5. Redeploy after setting variables. The sign-in screen is enabled only when Supabase is configured.
+
+The Supabase schema in `supabase/schema.sql` prepares a private-memory table with Row Level Security; cloud memory synchronisation is not yet connected. For local development, never commit real secrets or place secret keys in `VITE_*` variables.
 
 ## Security design
 - `/api/chat` accepts only POST requests with a valid Supabase Auth access token.
