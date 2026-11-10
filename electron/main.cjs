@@ -4,6 +4,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1440, height: 920, minWidth: 900, minHeight: 640,
     title: "Wednesday",
+    icon: path.join(__dirname, "../assets/wednesday.ico"),
     backgroundColor: "#090b14",
     autoHideMenuBar: true,
     webPreferences: { contextIsolation: true, nodeIntegration: false }
