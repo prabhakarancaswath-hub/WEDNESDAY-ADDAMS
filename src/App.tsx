@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient, type Session } from "@supabase/supabase-js";
+import { Activity, ArrowDownLeft, ArrowUpRight, Bell, Bot, BriefcaseBusiness, Check, ChevronRight, CircleHelp, Clock3, Coins, Command, Download, Dumbbell, FolderKanban, LayoutDashboard, ListTodo, Plus, Search, Settings, ShieldCheck, Sparkles, StickyNote, Target, Trash2, Wallet } from "lucide-react";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
-import { Activity, ArrowDownLeft, ArrowUpRight, Bell, Bot, BriefcaseBusiness, Check, ChevronRight, CircleHelp, Clock3, Coins, Command, Download, Dumbbell, FolderKanban, LayoutDashboard, ListTodo, Plus, Search, Settings, ShieldCheck, Sparkles, StickyNote, Target, Trash2, Wallet } from "lucide-react";
 type Task={id:number;title:string;done:boolean;due:string};type Project={id:number;name:string;detail:string;progress:number};type Entry={id:number;label:string;amount:number;kind:"income"|"expense";date:string};type Note={id:number;text:string;date:string};type State={tasks:Task[];projects:Project[];entries:Entry[];notes:Note[];social:number;water:number;sleep:number;activity:string;name:string};
 const initial:State={tasks:[{id:1,title:"Review today's priorities",done:false,due:"Today"},{id:2,title:"Work on Wednesday app",done:false,due:"Today"},{id:3,title:"Study / college work",done:false,due:"Today"}],projects:[{id:1,name:"Wednesday Personal AI",detail:"Windows + Android personal assistant",progress:35},{id:2,name:"SAMAM — SDG 10",detail:"AI assistant and inclusion platform",progress:60}],entries:[],notes:[],social:0,water:0,sleep:0,activity:"",name:"Aswath"};
 const readState=():State=>{try{return {...initial,...JSON.parse(localStorage.getItem("wednesday-state")||"{}")};}catch{return initial;}};
