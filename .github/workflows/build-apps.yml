@@ -1,6 +1,9 @@
 name: Build Wednesday apps
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths: ['src/**', 'scripts/**', 'package.json', 'electron/**', 'capacitor.config.ts', '.github/workflows/build-apps.yml']
   push:
     branches: [main]
     paths: ['src/**', 'scripts/**', 'package.json', 'electron/**', 'capacitor.config.ts', '.github/workflows/build-apps.yml']
