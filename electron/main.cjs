@@ -37,10 +37,20 @@ ipcMain.handle("openjarvis:chat", async (_event, payload) => {
     : messages;
 
   try {
+    const modelsResponse = await fetch(`${OPENJARVIS_BASE}/v1/models`, {
+      signal: AbortSignal.timeout(5000),
+    });
+    const modelsPayload = await modelsResponse.json().catch(() => ({}));
+    const model = modelsPayload?.data?.[0]?.id;
+    if (!modelsResponse.ok || typeof model !== "string" || !model) {
+      throw new Error("No local OpenJarvis model is available. Install or start a model, then try again.");
+    }
+
     const response = await fetch(`${OPENJARVIS_BASE}/v1/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        model,
         messages: requestMessages,
         max_tokens: 900,
         stream: false,
