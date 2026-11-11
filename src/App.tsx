@@ -15,7 +15,8 @@ const [session,setSession]=useState<Session|null>(null),[authReady,setAuthReady]
 const recognitionRef=useRef<SpeechRecognitionLike|null>(null);
 useEffect(()=>{localStorage.setItem("wednesday-state",JSON.stringify(data));},[data]);
 useEffect(()=>{if(!supabase){setAuthReady(true);return;}supabase.auth.getSession().then(({data})=>{setSession(data.session);setAuthReady(true);});const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,next)=>setSession(next));return()=>subscription.unsubscribe();},[]);
-useEffect(()=>{localStorage.setItem("wednesday-chat",chat);},[chat]);\nuseEffect(()=>{let active=true;const bridge=window.wednesday?.openJarvis;if(!bridge)return;bridge.check().then(result=>{if(active)setOpenJarvisAvailable(result.available);}).catch(()=>{if(active)setOpenJarvisAvailable(false);});return()=>{active=false;};},[]);
+useEffect(()=>{localStorage.setItem("wednesday-chat",chat);},[chat]);
+useEffect(()=>{let active=true;const bridge=window.wednesday?.openJarvis;if(!bridge)return;bridge.check().then(result=>{if(active)setOpenJarvisAvailable(result.available);}).catch(()=>{if(active)setOpenJarvisAvailable(false);});return()=>{active=false;};},[]);
 useEffect(()=>()=>{recognitionRef.current?.stop();},[]);
 const notify=(s:string)=>{setToast(s);window.setTimeout(()=>setToast(""),2400);};
 const startVoice=()=>{if(voiceListening){recognitionRef.current?.stop();setVoiceListening(false);return;}const browserWindow=window as Window & {SpeechRecognition?:new()=>SpeechRecognitionLike;webkitSpeechRecognition?:new()=>SpeechRecognitionLike};const SpeechRecognitionCtor=browserWindow.SpeechRecognition||browserWindow.webkitSpeechRecognition;if(!SpeechRecognitionCtor){notify("Voice input is not supported here. Please type your message.");return;}const recognition=new SpeechRecognitionCtor();recognition.lang=voiceLanguage;recognition.interimResults=false;recognition.onresult=(event)=>{const transcript=event.results[0]?.[0]?.transcript?.trim()||"";if(transcript){setQuestion(current=>[current,transcript].filter(Boolean).join(" "));notify("Voice captured. Review it, then press Send.");}};recognition.onerror=()=>{setVoiceListening(false);notify("Microphone recognition failed. You can type instead.");};recognition.onend=()=>{setVoiceListening(false);recognitionRef.current=null;};recognitionRef.current=recognition;setVoiceListening(true);try{recognition.start();}catch{setVoiceListening(false);recognitionRef.current=null;notify("Could not start the microphone. Check browser permission.");}};
@@ -26,7 +27,51 @@ const greeting=useMemo(()=>{const h=new Date().getHours();return h<12?"Good morn
 const addTask=()=>{if(!taskText.trim())return;update("tasks",[...data.tasks,{id:Date.now(),title:taskText.trim(),done:false,due:"Today"}]);setTaskText("");notify("Task added");};
 const addNote=()=>{if(!noteText.trim())return;update("notes",[{id:Date.now(),text:noteText.trim(),date:new Date().toLocaleDateString()},...data.notes]);setNoteText("");notify("Memory saved on this device");};
 const addEntry=()=>{const n=Number(amount);if(!entryLabel.trim()||!Number.isFinite(n)||n<=0)return;update("entries",[{id:Date.now(),label:entryLabel.trim(),amount:n,kind:entryKind,date:new Date().toLocaleDateString()},...data.entries]);setAmount("");setEntryLabel("");notify("Money entry saved");};
-const ask=async()=>{if(!question.trim()||aiBusy)return;const q=question.trim();setQuestion("");setChat(c=>c+"\n\nYOU: "+q);setAiBusy(true);try{if(aiProvider==="openjarvis"){const bridge=window.wednesday?.openJarvis;if(!bridge)throw new Error("OpenJarvis is available in the Wednesday Windows desktop app. Start the local OpenJarvis server, then try again.");const localMessages=chat.split("\\n\\n").slice(-12).map(line=>({role:line.startsWith("YOU:")?"user":line.startsWith("WEDNESDAY:")?"assistant":null,content:line.replace(/^(YOU:|WEDNESDAY:)\\s*/,"")})).filter((item):item is {role:"user"|"assistant";content:string}=>item.role!==null).concat([{role:"user" as const,content:q}]);const result=await bridge.chat(localMessages,JSON.stringify({name:data.name,tasks:data.tasks,projects:data.projects,notes:data.notes.slice(0,10)}).slice(0,5000));setOpenJarvisAvailable(true);setChat(c=>c+"\\n\\nWEDNESDAY: "+result.answer);return;}if(!session||!supabase){const localAnswer=q.toLowerCase().includes("task")?"Your current tasks: "+(data.tasks.map(t=>(t.done?"✓ ":"• ")+t.title).join("; ")||"No tasks saved yet."):"I’m in free local mode. I can save and organise your tasks, notes and manual budget on this device. Online GPT needs an optional API setup.";setChat(c=>c+"\n\nWEDNESDAY: "+localAnswer);return;}const response=await fetch((import.meta.env.VITE_API_BASE_URL||"")+"/api/chat",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({messages:chat.split("\n\n").slice(-12).map(line=>({role:line.startsWith("YOU:")?"user":line.startsWith("WEDNESDAY:")?"assistant":null,content:line.replace(/^(YOU:|WEDNESDAY:)\\s*/,"")})).filter((item):item is {role:"user"|"assistant";content:string}=>item.role!==null).concat([{role:"user" as const,content:q}]),context:JSON.stringify({name:data.name,tasks:data.tasks,projects:data.projects,notes:data.notes.slice(0,10)}).slice(0,5000)})});const result=await response.json();if(!response.ok)throw new Error(result.error||"AI request failed.");setChat(c=>c+"\n\nWEDNESDAY: "+result.answer);}catch(error){setChat(c=>c+"\n\nWEDNESDAY: "+(error instanceof Error?error.message:"Could not reach the AI service."));}finally{setAiBusy(false);}};const exportData=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="wednesday-backup.json";a.click();URL.revokeObjectURL(url);notify("Backup exported");};
+const ask=async()=>{
+  if(!question.trim()||aiBusy)return;
+  const q=question.trim();
+  setQuestion("");
+  setChat(c=>c+"\n\nYOU: "+q);
+  setAiBusy(true);
+  try{
+    if(aiProvider==="openjarvis"){
+      const bridge=window.wednesday?.openJarvis;
+      if(!bridge)throw new Error("OpenJarvis is available in the Wednesday Windows desktop app. Start the local OpenJarvis server, then try again.");
+      const localMessages=chat.split("\n\n").slice(-12)
+        .map(line=>({role:line.startsWith("YOU:")?"user":line.startsWith("WEDNESDAY:")?"assistant":null,content:line.replace(/^(YOU:|WEDNESDAY:)\s*/,"")}))
+        .filter((item):item is {role:"user"|"assistant";content:string}=>item.role!==null)
+        .concat([{role:"user" as const,content:q}]);
+      const result=await bridge.chat(localMessages,JSON.stringify({name:data.name,tasks:data.tasks,projects:data.projects,notes:data.notes.slice(0,10)}).slice(0,5000));
+      setOpenJarvisAvailable(true);
+      setChat(c=>c+"\n\nWEDNESDAY: "+result.answer);
+      return;
+    }
+    if(!session||!supabase){
+      const localAnswer=q.toLowerCase().includes("task")?"Your current tasks: "+(data.tasks.map(t=>(t.done?"✓ ":"• ")+t.title).join("; ")||"No tasks saved yet."):"I’m in free local mode. I can save and organise your tasks, notes and manual budget on this device. Online GPT needs an optional API setup.";
+      setChat(c=>c+"\n\nWEDNESDAY: "+localAnswer);
+      return;
+    }
+    const response=await fetch((import.meta.env.VITE_API_BASE_URL||"")+"/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},
+      body:JSON.stringify({
+        messages:chat.split("\n\n").slice(-12)
+          .map(line=>({role:line.startsWith("YOU:")?"user":line.startsWith("WEDNESDAY:")?"assistant":null,content:line.replace(/^(YOU:|WEDNESDAY:)\s*/,"")}))
+          .filter((item):item is {role:"user"|"assistant";content:string}=>item.role!==null)
+          .concat([{role:"user" as const,content:q}]),
+        context:JSON.stringify({name:data.name,tasks:data.tasks,projects:data.projects,notes:data.notes.slice(0,10)}).slice(0,5000)
+      })
+    });
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error||"AI request failed.");
+    setChat(c=>c+"\n\nWEDNESDAY: "+result.answer);
+  }catch(error){
+    if(aiProvider==="openjarvis")setOpenJarvisAvailable(false);
+    setChat(c=>c+"\n\nWEDNESDAY: "+(error instanceof Error?error.message:"Could not reach the AI service."));
+  }finally{
+    setAiBusy(false);
+  }
+};const exportData=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="wednesday-backup.json";a.click();URL.revokeObjectURL(url);notify("Backup exported");};
 const filteredTasks=data.tasks.filter(t=>t.title.toLowerCase().includes(search.toLowerCase()));
 const authenticate=async()=>{if(!supabase){setAuthError("Add Supabase frontend environment variables before signing in.");return;}if(!authEmail.trim()||authPassword.length<8){setAuthError("Enter your email and a password with at least 8 characters.");return;}setAuthBusy(true);setAuthError("");try{const result=authMode==="signin"?await supabase.auth.signInWithPassword({email:authEmail.trim(),password:authPassword}):await supabase.auth.signUp({email:authEmail.trim(),password:authPassword});if(result.error)throw result.error;if(authMode==="signup"&&!result.data.session)setAuthError("Account created. Check your email for confirmation, then sign in.");}catch(error){setAuthError(error instanceof Error?error.message:"Sign-in failed.");}finally{setAuthBusy(false);}};
 if(!authReady)return <div className="auth-screen"><div className="auth-card"><BrandMark/><h1>Starting Wednesday</h1><p>Preparing your private workspace…</p></div></div>;
