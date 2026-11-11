@@ -37,12 +37,22 @@ The Supabase schema in `supabase/schema.sql` prepares a private-memory table wit
 Wednesday can use an OpenJarvis server running on the same Windows computer. This is an optional local model provider; it does not replace the existing default assistant or require an OpenAI API key. The current bridge is deliberately restricted to the loopback address `127.0.0.1:8000` and is available only in the Electron Windows desktop build.
 
 1. Review the [official OpenJarvis native Windows guide](https://open-jarvis.github.io/OpenJarvis/getting-started/windows-native/) and its requirements with a parent/guardian before installing software. It currently documents Windows 10 1809+/Windows 11, Python 3.10–3.13, Git, and roughly 5 GB of free space.
-2. Install OpenJarvis using the official guide. Open PowerShell and start its local API server from the OpenJarvis source directory:
+2. In PowerShell, run the official installer:
    
-       uv run jarvis serve --host 127.0.0.1 --port 8000 --agent simple
+       irm https://open-jarvis.github.io/OpenJarvis/install.ps1 | iex
 
-3. Check that `http://127.0.0.1:8000/health` responds successfully.
-4. Open Wednesday → Assistant → choose **OpenJarvis · Local**. The status should show **Connected**. If the server is stopped, start it and select the provider again to refresh the status.
+3. Let the installer finish. It clones OpenJarvis to `%LOCALAPPDATA%\OpenJarvis\src` and installs its desktop/server dependencies. Then run hardware detection and configuration:
+   
+       cd "$env:LOCALAPPDATA\OpenJarvis\src"
+       uv run jarvis init
+
+   Follow the prompts to select an inference engine/model. On a 16 GB Intel-graphics laptop, let hardware detection choose the engine rather than assuming Intel integrated graphics has supported GPU acceleration.
+4. Start the local API server in the same PowerShell window:
+   
+       uv run jarvis serve
+
+5. Check that `http://127.0.0.1:8000/health` responds successfully.
+6. Open Wednesday → Assistant → choose **OpenJarvis · Local**. The status should show **Connected**. Keep the server window running while using Wednesday.
 
 OpenJarvis exposes an OpenAI-compatible chat endpoint at `/v1/chat/completions`. Wednesday sends chat messages and the selected task/project/note context to that local endpoint. The selected context is limited to the current workspace data passed by the app; it is not automatically uploaded to OpenAI by this local provider. OpenJarvis still needs a local inference engine and model, and model performance depends on the computer's available memory and hardware.
 
