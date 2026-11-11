@@ -56,7 +56,7 @@ Wednesday can use an OpenJarvis server running on the same Windows computer. Thi
 
 OpenJarvis exposes an OpenAI-compatible chat endpoint at `/v1/chat/completions`. Wednesday sends chat messages and the selected task/project/note context to that local endpoint. The selected context is limited to the current workspace data passed by the app; it is not automatically uploaded to OpenAI by this local provider. OpenJarvis still needs a local inference engine and model, and model performance depends on the computer's available memory and hardware.
 
-This first integration uses the OpenJarvis `simple` agent and does not enable arbitrary computer-control tools. The integration is currently Windows Electron desktop only; browser and Android builds retain their existing assistant behavior. OpenJarvis has its own local storage and privacy settings, so review its documentation before indexing private documents or enabling additional tools.
+This integration does not enable arbitrary computer-control tools. The integration is currently Windows Electron desktop only; browser and Android builds retain their existing assistant behavior. OpenJarvis has its own local storage and privacy settings, so review its documentation before indexing private documents or enabling additional tools.
 
 ## Build
 Requires Node.js 20+.
